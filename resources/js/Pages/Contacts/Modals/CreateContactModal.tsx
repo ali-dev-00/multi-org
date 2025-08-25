@@ -7,7 +7,6 @@ import {
     DialogHeader, 
     DialogTitle 
 } from '@/Components/ui/dialog'
-import { Button } from '@/Components/ui/button'
 import { Input } from '@/Components/ui/input'
 import { Label } from '@/Components/ui/label'
 import { Textarea } from '@/Components/ui/textarea'
@@ -26,12 +25,14 @@ export default function CreateContactModal({ open, onOpenChange }: CreateContact
         email: '',
         phone: '',
         notes: '',
-        custom_fields: {}
+        custom_fields: {},
+        avatar: null as File | null,
     })
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         form.post(route('contacts.store'), {
+            forceFormData: true,
             onSuccess: () => {
                 onOpenChange(false)
                 form.reset()
@@ -41,7 +42,7 @@ export default function CreateContactModal({ open, onOpenChange }: CreateContact
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className='' >
+            <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Create New Contact</DialogTitle>
                     <DialogDescription>
@@ -50,7 +51,29 @@ export default function CreateContactModal({ open, onOpenChange }: CreateContact
                 </DialogHeader>
                 <form onSubmit={handleSubmit}>
                     <div className="grid gap-4 py-4">
+                    <div>
+                            <Label htmlFor="avatar">Avatar</Label>
+                            <div className="mt-2 flex items-center gap-4">
+                                {form.data.avatar && (
+                                    <img
+                                        src={URL.createObjectURL(form.data.avatar)}
+                                        alt="Preview"
+                                        className="h-16 w-16 rounded-full object-cover border"
+                                    />
+                                )}
+                                <Input
+                                    id="avatar"
+                                    type="file"
+                                    accept="image/*"
+                                    className="border-gray-300 rounded-md"
+                                    onChange={(e) =>
+                                        form.setData('avatar', e.target.files ? e.target.files[0] : null)
+                                    }
+                                />
+                            </div>
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
+                            
                             <div>
                                 <Label htmlFor="first_name">First Name</Label>
                                 <Input
@@ -58,7 +81,7 @@ export default function CreateContactModal({ open, onOpenChange }: CreateContact
                                     value={form.data.first_name}
                                     onChange={(e) => form.setData('first_name', e.target.value)}
                                     required
-                                      className='mt-2 border-gray-300 rounded-md'
+                                    className='mt-2 border-gray-300 rounded-md'
                                 />
                             </div>
                             <div>
@@ -68,7 +91,7 @@ export default function CreateContactModal({ open, onOpenChange }: CreateContact
                                     value={form.data.last_name}
                                     onChange={(e) => form.setData('last_name', e.target.value)}
                                     required
-                                      className='mt-2 border-gray-300 rounded-md'
+                                    className='mt-2 border-gray-300 rounded-md'
                                 />
                             </div>
                         </div>
@@ -80,7 +103,7 @@ export default function CreateContactModal({ open, onOpenChange }: CreateContact
                                 value={form.data.email}
                                 onChange={(e) => form.setData('email', e.target.value)}
                                 required
-                                  className='mt-2 border-gray-300 rounded-md'
+                                className='mt-2 border-gray-300 rounded-md'
                             />
                         </div>
                         <div>
@@ -90,9 +113,10 @@ export default function CreateContactModal({ open, onOpenChange }: CreateContact
                                 type="tel"
                                 value={form.data.phone}
                                 onChange={(e) => form.setData('phone', e.target.value)}
-                                  className='mt-2 border-gray-300 rounded-md'
+                                className='mt-2 border-gray-300 rounded-md'
                             />
                         </div>
+                       
                         <div>
                             <Label htmlFor="notes">Notes</Label>
                             <Textarea
@@ -100,7 +124,7 @@ export default function CreateContactModal({ open, onOpenChange }: CreateContact
                                 value={form.data.notes}
                                 onChange={(e) => form.setData('notes', e.target.value)}
                                 placeholder="Add any notes about this contact..."
-                                  className='mt-2 border-gray-300 rounded-md'
+                                className='mt-2 border-gray-300 rounded-md'
                             />
                         </div>
                     </div>

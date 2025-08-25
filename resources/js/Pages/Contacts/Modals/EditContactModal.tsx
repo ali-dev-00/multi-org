@@ -15,23 +15,6 @@ import { Textarea } from '@/Components/ui/textarea'
 import SecondaryButton from '@/Components/SecondaryButton'
 import PrimaryButton from '@/Components/PrimaryButton'
 
-interface ContactMeta {
-    id: number
-    key: string
-    value: string
-}
-
-interface ContactNote {
-    id: number
-    body: string
-    user_id: number
-    created_at: string
-    updated_at: string
-    user: {
-        name: string
-    }
-}
-
 interface Contact {
     id: number
     first_name: string
@@ -56,10 +39,10 @@ export default function EditContactModal({ open, onOpenChange, contact }: EditCo
         email: '',
         phone: '',
         notes: '',
-        meta: [] as { key: string; value: string }[]
+        meta: [] as { key: string; value: string }[],
+        avatar: null as File | null,
     })
 
-    // Update form data when contact changes
     useEffect(() => {
         if (contact) {
             form.setData({
@@ -68,7 +51,8 @@ export default function EditContactModal({ open, onOpenChange, contact }: EditCo
                 email: contact.email || '',
                 phone: contact.phone || '',
                 notes: contact.notes?.map(note => note.body).join('\n') || '',
-                meta: contact.meta?.map(m => ({ key: m.key, value: m.value })) || []
+                meta: contact.meta?.map(m => ({ key: m.key, value: m.value })) || [],
+                avatar: null,
             })
         }
     }, [contact])
@@ -77,6 +61,7 @@ export default function EditContactModal({ open, onOpenChange, contact }: EditCo
         e.preventDefault()
         if (contact) {
             form.patch(route('contacts.update', contact.id), {
+                forceFormData: true,
                 onSuccess: () => {
                     onOpenChange(false)
                     form.reset()
@@ -113,6 +98,38 @@ export default function EditContactModal({ open, onOpenChange, contact }: EditCo
                 </DialogHeader>
                 <form onSubmit={handleSubmit}>
                     <div className="grid gap-4 py-4">
+                    <div>
+                            <Label htmlFor="edit_avatar">Avatar</Label>
+                            <div className="mt-2 flex items-center gap-4">
+                                {form.data.avatar ? (
+                                    <img
+                                        src={URL.createObjectURL(form.data.avatar)}
+                                        alt="Preview"
+                                        className="h-16 w-16 rounded-full object-cover border"
+                                    />
+                                ) : contact?.avatar_path ? (
+                                    <img
+                                        src={`/storage/${contact.avatar_path}`}
+                                        alt="Current Avatar"
+                                        className="h-16 w-16 rounded-full object-cover border"
+                                    />
+                                ) : (
+                                    <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center text-sm text-gray-500 font-semibold">
+                                        {contact?.first_name?.charAt(0)}
+                                        {contact?.last_name?.charAt(0)}
+                                    </div>
+                                )}
+                                <Input
+                                    id="edit_avatar"
+                                    type="file"
+                                    accept="image/*"
+                                    className="border-gray-300 rounded-md"
+                                    onChange={(e) =>
+                                        form.setData('avatar', e.target.files ? e.target.files[0] : null)
+                                    }
+                                />
+                            </div>
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="edit_first_name">First Name</Label>
@@ -121,7 +138,7 @@ export default function EditContactModal({ open, onOpenChange, contact }: EditCo
                                     value={form.data.first_name}
                                     onChange={(e) => form.setData('first_name', e.target.value)}
                                     required
-                                      className='mt-2 border-gray-300 rounded-md'
+                                    className="mt-2 border-gray-300 rounded-md"
                                 />
                             </div>
                             <div>
@@ -131,7 +148,7 @@ export default function EditContactModal({ open, onOpenChange, contact }: EditCo
                                     value={form.data.last_name}
                                     onChange={(e) => form.setData('last_name', e.target.value)}
                                     required
-                                    className='mt-2 border-gray-300 rounded-md'
+                                    className="mt-2 border-gray-300 rounded-md"
                                 />
                             </div>
                         </div>
@@ -143,7 +160,7 @@ export default function EditContactModal({ open, onOpenChange, contact }: EditCo
                                 value={form.data.email}
                                 onChange={(e) => form.setData('email', e.target.value)}
                                 required
-                                className='mt-2 border-gray-300 rounded-md'
+                                className="mt-2 border-gray-300 rounded-md"
                             />
                         </div>
                         <div>
@@ -153,9 +170,10 @@ export default function EditContactModal({ open, onOpenChange, contact }: EditCo
                                 type="tel"
                                 value={form.data.phone}
                                 onChange={(e) => form.setData('phone', e.target.value)}
-                                className='mt-2 border-gray-300 rounded-md'
+                                className="mt-2 border-gray-300 rounded-md"
                             />
                         </div>
+                        
                         <div>
                             <Label htmlFor="edit_notes">Notes</Label>
                             <Textarea
@@ -163,7 +181,7 @@ export default function EditContactModal({ open, onOpenChange, contact }: EditCo
                                 value={form.data.notes}
                                 onChange={(e) => form.setData('notes', e.target.value)}
                                 placeholder="Add any notes about this contact..."
-                                className='mt-2 border-gray-300 rounded-md'
+                                className="mt-2 border-gray-300 rounded-md"
                             />
                         </div>
                         <div className="grid gap-2">
@@ -175,7 +193,6 @@ export default function EditContactModal({ open, onOpenChange, contact }: EditCo
                                         value={field.key}
                                         onChange={(e) => updateMetaField(index, 'key', e.target.value)}
                                         className="col-span-1 mt-2 border-gray-300 rounded-md"
-                                        
                                     />
                                     <Input
                                         placeholder="Field Value"
@@ -192,7 +209,11 @@ export default function EditContactModal({ open, onOpenChange, contact }: EditCo
                                     </Button>
                                 </div>
                             ))}
-                            <SecondaryButton variant="default"  onClick={addMetaField} className="col-span-2 flex justify-center text-sm py-1">
+                            <SecondaryButton 
+                                variant="default"  
+                                onClick={addMetaField} 
+                                className="col-span-2 flex justify-center text-sm py-1"
+                            >
                                 Add Custom Field
                             </SecondaryButton>
                         </div>

@@ -17,33 +17,40 @@ class DuplicateEmailTest extends TestCase
         $this->seed();
         $user = User::first();
         $org = Organization::first();
-
+    
         $this->actingAs($user)
             ->withSession(['current_organization_id' => $org->id]);
-
-        $contact = Contact::create([
-            'organization_id' => $org->id,
+    
+        $contact = new Contact([
             'first_name' => 'Jane',
             'last_name' => 'Doe',
-            'email' => 'DUP@example.com',
+            'email' => 'test2222@gmail.com',
             'phone' => null,
             'created_by' => $user->id,
             'updated_by' => $user->id,
         ]);
-
+        $contact->organization_id = $org->id;
+        $contact->save();
+    
         $response = $this->postJson(route('contacts.store'), [
             'first_name' => 'John',
             'last_name' => 'Smith',
-            'email' => 'dup@example.com',
+            'email' => 'test2222@gmail.com',
         ]);
-
+    
         $response->assertStatus(422)
             ->assertExactJson([
                 'code' => 'DUPLICATE_EMAIL',
                 'existing_contact_id' => $contact->id,
             ]);
     }
+    
 }
+
+
+
+
+
 
 
 
