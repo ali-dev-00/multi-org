@@ -41,13 +41,7 @@ export default function Index({ organizations, currentOrganizationId }: Props) {
             return;
         }
 
-        // Set loading state
         setSwitchingOrgId(organizationId);
-
-        // Debug: Log the data to submit
-        console.log('Submitting organization switch:', { organization_id: organizationId });
-        
-        // Use router.post directly to avoid form state issues
         router.post(route('organizations.switch'), {
             organization_id: organizationId.toString()
         }, {
